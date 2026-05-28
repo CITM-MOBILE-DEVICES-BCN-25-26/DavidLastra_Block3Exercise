@@ -5,21 +5,6 @@ using UnityEngine;
 
 namespace CleanRefactor.Infrastructure
 {
-    /// <summary>
-    /// Infrastructure implementation of IPlayerRepository that persists the
-    /// player state to a JSON file on disk.
-    ///
-    /// This is the ONLY class (together with the alternative PlayerPrefs one)
-    /// that knows HOW data is stored. The domain and application layers depend
-    /// only on the IPlayerRepository abstraction, never on this concrete type
-    /// nor on Unity's file/JSON APIs.
-    ///
-    /// The file lives in Application.persistentDataPath, the platform-safe
-    /// writable folder Unity provides on every target (PC, Android, iOS...).
-    ///
-    /// Swapping PlayerPrefs for this class required ZERO changes to the
-    /// domain/application code — that is exactly the point of the abstraction.
-    /// </summary>
     public sealed class JsonFilePlayerRepository : IPlayerRepository
     {
        
