@@ -1,0 +1,138 @@
+================================================================================
+ BLOCK 3 - CLEAN REFACTOR - DOCUMENTATION
+ Shop Purchase System
+================================================================================
+
+--------------------------------------------------------------------------------
+ 1. MAIN PROBLEMS OF THE ORIGINAL DESIGN
+--------------------------------------------------------------------------------
+ 
+Principalmente, el problema del código es que es un único script Monobehaviour que
+hace todo.
+
+Rompe varios principios de solid como el SRP y el OCP ya que hace múltiples funciones
+y escalar el proyecto es muy complejo  
+
+Además, el proyecto dependía completamente del motor Unity ya que todo estaba hecho en 
+Monobehaviour.
+ 
+--------------------------------------------------------------------------------
+ 2. RESPONSIBILITIES OF EACH LAYER
+--------------------------------------------------------------------------------
+ 
+La solución se divide en cuatro capas. Las dependencias apuntan siempre hacia
+adentro, hacia el Dominio. El Dominio no conoce nada del resto de capas.
+ 
+  DOMINIO  (namespace CleanRefactor.Domain)  -- C# puro, sin Unity
+    - PlayerState ............. la entidad del jugador (monedas, nivel, usos...).
+    - ShopItemType / PurchaseStatus ... enums con seguridad de tipos.
+    - ShopConfig / ShopItemConfig ..... objetos de configuración en C# plano.
+    - IShopItem + BombItem / ShieldItem / DoubleCoinsItem ... cada item tiene sus
+      propias reglas de compra (CanPurchase) y sus efectos (ApplyPurchase).
+    - ShopCatalog ............. resuelve un IShopItem a partir de su tipo.
+    
+ 
+  APLICACIÓN  (namespace CleanRefactor.Application)  -- C# puro, SIN Unity
+    - PurchaseItemUseCase ..... orquesta una compra: cargar -> validar ->
+      gastar monedas -> aplicar efecto -> guardar -> devolver resultado.
+    - GetShopStatusUseCase .... calcula, para cada item, si se puede comprar Y
+      el motivo semántico (PurchaseStatus) de por qué no.
+    - PurchaseResult / ShopStatusDto ... DTOs devueltos a la capa de
+      presentación para que la UI nunca toque el modelo de dominio.
+    - IPlayerRepository ....... ABSTRACCIÓN de persistencia (puerto). El dominio
+      declara lo que necesita; no sabe cómo se almacena.
+ 
+  INFRAESTRUCTURA  (namespace CleanRefactor.Infrastructure)  -- usa Unity
+    - JsonFilePlayerRepository ... la persistencia POR DEFECTO. Serializa el
+      jugador a un archivo JSON en Application.persistentDataPath. Implementa
+      IPlayerRepository.
+ 
+  PRESENTACIÓN  (namespace CleanRefactor.Presentation)  -- MVP
+    - ShopPresenter ........... presenter en C# puro (sin MonoBehaviour). Recibe
+      las acciones del usuario (clics y hovers), llama a los casos de uso,
+      actualiza la vista y dispara el audio.
+    - IShopView ............... el contrato de la Vista pasiva.
+    - ShopView ................ el MonoBehaviour de Unity: solo renderiza datos,
+      atenúa los botones no comprables y reenvía los clics y eventos de hover.
+      Sin reglas de negocio.
+    - PurchaseFeedbackPresenter ... traduce un enum PurchaseStatus a texto de
+      UI, tanto para resultados de compra ("Bomb purchased!") como para las
+      pistas de hover ("Can't buy Bomb: not enough coins"). El único sitio
+      donde existe el texto final de UI.
+    - IPurchaseAudio / UnityPurchaseAudio ... el audio queda en presentación.
+ 
+  COMPOSICIÓN  (namespace CleanRefactor.Composition)
+    - ShopBootstrap ........... la Raíz de Composición (Composition Root). El
+      único sitio donde se crean y se conectan todas las clases concretas
+      (inyección de dependencias manual) y el único sitio que lee los valores
+      [SerializeField] de Unity. También expone un toggle de depuración
+      "reset a valores por defecto" 
+
+--------------------------------------------------------------------------------
+ 3. EXPLANATION OF THE USE CASES
+--------------------------------------------------------------------------------
+
+El proyecto usa únicamente 2 casos de uso que funcionan así:
+
+PurchaseItemUseCase.Execute(itemType):
+    1. Carga el PlayerState desde IPlayerRepository.
+    2. Resuelve el IShopItem desde el catálogo.
+    3. Pregunta al item: item.CanPurchase(player) -> un PurchaseStatus.
+    4. Si el estado NO es "Purchased": devuelve un PurchaseResult de fallo.
+       No se muta nada y no se guarda nada.
+    5. Si es válido: descuenta las monedas UNA vez (la regla de monedas no se
+       duplica por item), llama a item.ApplyPurchase(player) para el efecto
+       específico del item, y persiste el jugador con IPlayerRepository.Save.
+    6. Devuelve un DTO PurchaseResult con un estado semántico + monedas
+       actualizadas.
+ 
+GetShopStatusUseCase.Execute():
+    Carga el jugador y reutiliza la propia regla CanPurchase de cada item para
+    construir un ShopStatusDto. El DTO lleva, por item, tanto si se puede
+    comprar como el motivo semántico (PurchaseStatus) cuando no se puede. La UI
+    consume este DTO y nunca evalúa una regla por sí misma: usa los booleanos
+    para atenuar botones y los estados para explicar, al pasar el ratón, POR QUÉ
+    no se puede comprar un item.
+ 
+ 
+--------------------------------------------------------------------------------
+ 4. HOW PERSISTENCE IS ABSTRACTED
+--------------------------------------------------------------------------------
+ 
+La persistencia se abstrae con la interfaz IPlayerRepository, declarada en la
+capa de Aplicación:
+
+  - Las capas de dominio y aplicación dependen únicamente de esta interfaz. Nunca
+    referencian el sistema de archivos.
+  - La implementación concreta por defecto es JsonFilePlayerRepository, en la
+    capa de Infraestructura. Serializa el jugador a un archivo JSON guardado en
+    Application.persistentDataPath.
+  - En los tests la interfaz se reemplaza por InMemoryPlayerRepository, y la
+    implementación JSON tiene sus propios tests de ida y vuelta (round-trip). 
+ 
+--------------------------------------------------------------------------------
+ 5. HOW THE SOLUTION CAN BE TESTED WITHOUT UNITY
+--------------------------------------------------------------------------------
+ 
+Toda la lógica del proyecto está principalmente en las capas de Dominio y Aplicación, que son C#
+puro y no contienen ningún tipo de dependencia de Unity (ni MonoBehaviour, Text, Button,
+PlayerPrefs, AudioSource, Debug.Log, GameObject).
+ 
+Como toda dependencia externa es una interfaz:
+  - IPlayerRepository se reemplaza en los tests por InMemoryPlayerRepository, un
+    fake que guarda el estado en un campo y expone un contador SaveCount.
+  - IShopView se reemplaza por un FakeShopView que registra el último estado y
+    feedback renderizados.
+  - IPurchaseAudio se reemplaza por un FakeAudio que cuenta cuántas veces se
+    pidió reproducir el sonido.
+ 
+--------------------------------------------------------------------------------
+ 6. WHY THIS SOLUTION IS BETTER THAN THE ORIGINAL
+--------------------------------------------------------------------------------
+ 
+El proyecto actual es mejor que el antiguo ya que ahora tiene una estructura de
+MVP en vez de ser una God class que controla todo el proyecto. Además, el proyecto
+como cumple los principios de SOLID, ahora es mucho más escalable y mantenible que 
+antes. 
+ 
+================================================================================

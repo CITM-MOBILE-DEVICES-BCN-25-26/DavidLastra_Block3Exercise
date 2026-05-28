@@ -22,7 +22,6 @@ namespace CleanRefactor.Infrastructure
         private readonly int _defaultCoins;
         private readonly int _defaultLevel;
 
-        /// <param name="fileName">Name of the save file (relative to persistentDataPath).</param>
         public JsonFilePlayerRepository(
             int defaultCoins = 500,
             int defaultLevel = 1,
