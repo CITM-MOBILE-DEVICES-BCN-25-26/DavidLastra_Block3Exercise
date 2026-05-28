@@ -5,15 +5,9 @@ using NUnit.Framework;
 
 namespace CleanRefactor.Tests
 {
-    /// <summary>
-    /// Tests for the MVP presenter. They prove the presentation layer is also
-    /// testable without Unity: the View and the AudioSource are replaced by
-    /// plain C# fakes.
-    /// </summary>
     [TestFixture]
     public class ShopPresenterTests
     {
-        /// <summary>Fake View: records what the presenter asked it to render.</summary>
         private sealed class FakeShopView : IShopView
         {
             public ShopStatusDto LastStatus;
@@ -22,8 +16,6 @@ namespace CleanRefactor.Tests
             public void RenderStatus(ShopStatusDto status) => LastStatus = status;
             public void ShowFeedback(string message)       => LastFeedback = message;
         }
-
-        /// <summary>Fake audio: counts how many times the sound was played.</summary>
         private sealed class FakeAudio : IPurchaseAudio
         {
             public int PlayCount;
@@ -103,7 +95,6 @@ namespace CleanRefactor.Tests
         [Test]
         public void When_HoveringUnbuyableItem_Expect_ReasonExplained()
         {
-            // Not enough coins for any item.
             var repo = new InMemoryPlayerRepository(
                 new PlayerState(10, 1, 0, 0, false));
             var view = new FakeShopView();

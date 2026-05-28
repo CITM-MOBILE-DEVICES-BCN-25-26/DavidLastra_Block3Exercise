@@ -6,14 +6,6 @@ using UnityEngine;
 
 namespace CleanRefactor.Tests
 {
-    /// <summary>
-    /// Tests for the JSON file persistence. They verify that saving the player
-    /// and loading it back preserves every field (requirement #7), that Reset
-    /// wipes the save, and that a missing file falls back to defaults.
-    ///
-    /// Each test uses a unique temporary file name and deletes it afterwards so
-    /// the tests are isolated and leave no garbage behind.
-    /// </summary>
     [TestFixture]
     public class JsonFilePlayerRepositoryTests
     {
@@ -22,7 +14,6 @@ namespace CleanRefactor.Tests
         [SetUp]
         public void SetUp()
         {
-            // Unique file per test run to avoid collisions.
             _fileName = "test_player_save_" + System.Guid.NewGuid() + ".json";
         }
 
@@ -61,7 +52,6 @@ namespace CleanRefactor.Tests
                 coins: 400, playerLevel: 5,
                 bombUses: 1, shieldUses: 2, hasDoubleCoins: true));
 
-            // A brand-new instance reading the same file proves it persisted.
             PlayerState loaded = NewRepo().Load();
 
             Assert.AreEqual(400, loaded.Coins);

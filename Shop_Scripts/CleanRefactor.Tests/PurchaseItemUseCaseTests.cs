@@ -4,12 +4,6 @@ using NUnit.Framework;
 
 namespace CleanRefactor.Tests
 {
-    /// <summary>
-    /// Unit tests for the purchase flow. They run with PURE NUnit and the
-    /// in-memory repository — no MonoBehaviour, no PlayerPrefs, no scene.
-    ///
-    /// Covers every test case explicitly listed in the assignment.
-    /// </summary>
     [TestFixture]
     public class PurchaseItemUseCaseTests
     {
@@ -19,8 +13,6 @@ namespace CleanRefactor.Tests
         {
             return new PlayerState(coins, level, bombUses, shieldUses, hasDouble);
         }
-
-        // --- Bomb ----------------------------------------------------------
 
         [Test]
         public void When_BombBoughtWithEnoughCoins_Expect_PurchaseSucceeds()
@@ -60,8 +52,6 @@ namespace CleanRefactor.Tests
             Assert.AreEqual(PurchaseStatus.MaxUsesReached, result.Status);
         }
 
-        // --- Shield --------------------------------------------------------
-
         [Test]
         public void When_ShieldBoughtWithEnoughCoins_Expect_PurchaseSucceeds()
         {
@@ -86,8 +76,6 @@ namespace CleanRefactor.Tests
             Assert.IsFalse(result.Success);
             Assert.AreEqual(PurchaseStatus.MaxUsesReached, result.Status);
         }
-
-        // --- Double Coins --------------------------------------------------
 
         [Test]
         public void When_DoubleCoinsBoughtWithEnoughCoinsAndLevel5_Expect_PurchaseSucceeds()
@@ -127,8 +115,6 @@ namespace CleanRefactor.Tests
             Assert.AreEqual(PurchaseStatus.AlreadyOwned, result.Status);
         }
 
-        // --- Cross-cutting persistence behaviour ---------------------------
-
         [Test]
         public void When_PurchaseSucceeds_Expect_PlayerCoinsUpdated()
         {
@@ -143,13 +129,11 @@ namespace CleanRefactor.Tests
         [Test]
         public void When_PurchaseSucceedsOrFails_Expect_PlayerSavedOnlyOnSuccess()
         {
-            // Failing purchase -> must NOT save.
             var failRepo = new InMemoryPlayerRepository(Player(coins: 50));
             var failUseCase = TestFactory.BuildPurchaseUseCase(failRepo);
             failUseCase.Execute(ShopItemType.Bomb);
             Assert.AreEqual(0, failRepo.SaveCount, "Failed purchase must not persist.");
 
-            // Successful purchase -> must save exactly once.
             var okRepo = new InMemoryPlayerRepository(Player(coins: 500));
             var okUseCase = TestFactory.BuildPurchaseUseCase(okRepo);
             okUseCase.Execute(ShopItemType.Bomb);

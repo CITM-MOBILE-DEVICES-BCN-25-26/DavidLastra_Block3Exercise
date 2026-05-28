@@ -22,11 +22,7 @@ namespace CleanRefactor.Infrastructure
     /// </summary>
     public sealed class JsonFilePlayerRepository : IPlayerRepository
     {
-        /// <summary>
-        /// Serializable transfer object. Unity's JsonUtility only serializes
-        /// public fields (not C# properties with private setters), so we map the
-        /// PlayerState to/from this plain struct of fields.
-        /// </summary>
+       
         [Serializable]
         private class PlayerData
         {
@@ -54,18 +50,20 @@ namespace CleanRefactor.Infrastructure
 
         public PlayerState Load()
         {
-            // No save yet -> return the configured defaults.
             if (!File.Exists(_filePath))
+            {
                 return new PlayerState(_defaultCoins, _defaultLevel, 0, 0, false);
-
+            }
+                
             try
             {
                 string json = File.ReadAllText(_filePath);
                 PlayerData data = JsonUtility.FromJson<PlayerData>(json);
 
-                // Corrupt or empty file -> fall back to defaults.
                 if (data == null)
+                {
                     return new PlayerState(_defaultCoins, _defaultLevel, 0, 0, false);
+                }
 
                 return new PlayerState(
                     data.coins,
@@ -99,9 +97,10 @@ namespace CleanRefactor.Infrastructure
 
         public void Reset()
         {
-            // Deletes the save file so the next Load() returns the defaults.
             if (File.Exists(_filePath))
+            {
                 File.Delete(_filePath);
+            }     
         }
     }
 }

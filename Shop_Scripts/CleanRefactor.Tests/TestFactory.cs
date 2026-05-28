@@ -4,13 +4,6 @@ using CleanRefactor.Domain;
 
 namespace CleanRefactor.Tests
 {
-    /// <summary>
-    /// Small helper that builds a fully-wired PurchaseItemUseCase /
-    /// GetShopStatusUseCase around an InMemoryPlayerRepository.
-    ///
-    /// Keeping the wiring in one place keeps every test short and focused on a
-    /// single behaviour.
-    /// </summary>
     public static class TestFactory
     {
         public static ShopCatalog BuildCatalog()

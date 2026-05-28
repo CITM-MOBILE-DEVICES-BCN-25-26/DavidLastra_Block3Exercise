@@ -1,11 +1,5 @@
 namespace CleanRefactor.Domain
 {
-    /// <summary>
-    /// Bomb item rules:
-    ///  - Cost: 100 coins (from config)
-    ///  - Allowed only if the player has enough coins and fewer than MaxUses bombs.
-    ///  - On success: bomb uses increase by 1.
-    /// </summary>
     public sealed class BombItem : IShopItem
     {
         private readonly ShopItemConfig _config;
@@ -21,10 +15,14 @@ namespace CleanRefactor.Domain
         public PurchaseStatus CanPurchase(PlayerState player)
         {
             if (player.BombUses >= _config.MaxUses)
+            {
                 return PurchaseStatus.MaxUsesReached;
+            }
 
             if (player.Coins < _config.Cost)
+            {
                 return PurchaseStatus.NotEnoughCoins;
+            }
 
             return PurchaseStatus.Purchased;
         }

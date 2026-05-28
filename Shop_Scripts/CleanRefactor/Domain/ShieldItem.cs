@@ -1,11 +1,5 @@
 namespace CleanRefactor.Domain
 {
-    /// <summary>
-    /// Shield item rules:
-    ///  - Cost: 150 coins (from config)
-    ///  - Allowed only if the player has enough coins and fewer than MaxUses shields.
-    ///  - On success: shield uses increase by 1.
-    /// </summary>
     public sealed class ShieldItem : IShopItem
     {
         private readonly ShopItemConfig _config;

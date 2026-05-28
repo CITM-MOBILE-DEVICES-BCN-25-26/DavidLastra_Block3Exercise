@@ -4,10 +4,6 @@ using NUnit.Framework;
 
 namespace CleanRefactor.Tests
 {
-    /// <summary>
-    /// Tests that the shop status is computed by the application layer, so the
-    /// UI never has to evaluate any rule (functional requirement #5).
-    /// </summary>
     [TestFixture]
     public class GetShopStatusUseCaseTests
     {

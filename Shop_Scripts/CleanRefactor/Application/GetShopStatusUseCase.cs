@@ -2,13 +2,6 @@ using CleanRefactor.Domain;
 
 namespace CleanRefactor.Application
 {
-    /// <summary>
-    /// Application use case: produces the current ShopStatusDto so the UI can
-    /// show coins and enable/disable buttons WITHOUT computing any rule itself.
-    ///
-    /// "Can I buy item X?" is answered by reusing each item's own CanPurchase
-    /// rule, so the validation logic exists in exactly one place.
-    /// </summary>
     public sealed class GetShopStatusUseCase
     {
         private readonly ShopCatalog _catalog;
